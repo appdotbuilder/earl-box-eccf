@@ -1,12 +1,19 @@
+import { db } from '../db';
+import { filesTable } from '../db/schema';
 import { type IncrementDownloadInput } from '../schema';
+import { eq, sql } from 'drizzle-orm';
 
-export async function incrementDownloadCount(input: IncrementDownloadInput): Promise<void> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is to:
-  // 1. Find the file by UUID in the database
-  // 2. Increment the download_count field by 1
-  // 3. This will be called whenever someone accesses a file through its link
-  // 4. Helps track file popularity and usage statistics
-  
-  return Promise.resolve();
-}
+export const incrementDownloadCount = async (input: IncrementDownloadInput): Promise<void> => {
+  try {
+    // Increment the download count for the file with the given ID
+    await db.update(filesTable)
+      .set({
+        download_count: sql`${filesTable.download_count} + 1`
+      })
+      .where(eq(filesTable.id, input.id))
+      .execute();
+  } catch (error) {
+    console.error('Failed to increment download count:', error);
+    throw error;
+  }
+};

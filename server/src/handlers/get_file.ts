@@ -1,12 +1,30 @@
+import { db } from '../db';
+import { filesTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type GetFileInput, type File } from '../schema';
 
 export async function getFile(input: GetFileInput): Promise<File | null> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is to:
-  // 1. Query the database for a file with the given UUID
-  // 2. Return the file metadata if found
-  // 3. Return null if file doesn't exist
-  // This will be used to serve files through the generated links
-  
-  return Promise.resolve(null); // Placeholder - should return file or null
+  try {
+    // Query the database for a file with the given UUID
+    const result = await db.select()
+      .from(filesTable)
+      .where(eq(filesTable.id, input.id))
+      .execute();
+
+    // Return the file if found, null if not found
+    if (result.length === 0) {
+      return null;
+    }
+
+    const file = result[0];
+    return {
+      ...file,
+      // Note: All fields are already correct types from the database
+      // No numeric conversions needed since file_size and download_count are integers
+      upload_date: file.upload_date // Already a Date object from timestamp column
+    };
+  } catch (error) {
+    console.error('File retrieval failed:', error);
+    throw error;
+  }
 }
